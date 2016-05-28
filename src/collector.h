@@ -6,18 +6,20 @@
 #endif
 #include "Murmur.h"
 
+#include <cstdint>
+#include <string>
 class MumbleCollector {
   public:
-    MumbleCollector();
+    MumbleCollector(std::string _host, uint32_t _port, std::string _secret);
     ~MumbleCollector();
-    void setProperty(std::string key, std::string value);
-    int getUserCount();
+    uint32_t getUserCount();
   private:
-    int port;
+    uint32_t port;
     std::string host;
     std::string secret;
     Ice::CommunicatorPtr ice;
     Murmur::MetaPrx connect();
+    std::string connectStr();
 };
 
 #endif

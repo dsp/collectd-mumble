@@ -1,7 +1,12 @@
 
 sources := Murmur.cpp collector.cpp main.cpp
 objects := $(sources:.cpp=.o)
-cflags += -I. -std=c++14 -DHAVE_ICE=1 -Wall -ggdb
+cflags += -I. -std=c++14 \
+          -DHAVE_ICE=1 \
+          -Wall -Wextra -Wfloat-equal -Wconversion \
+          -Wundef -Wshadow -Wpointer-arith -Wcast-align \
+		  -Werror \
+          -ggdb 
 cflags += -DHAVE_COLLECTD=1
 cflags += $(shell pkg-config --cflags ice)
 #ldflags += $(shell pkg-config --libs ice)

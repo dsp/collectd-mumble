@@ -17,7 +17,8 @@ extern "C" {
 
 #include "collector.h"
 
-static const char * NAME = "mumble";
+// static const char * PLUGIN_NAME = "mumble";
+#define PLUGIN_NAME "mumble"
 
 static const char *config_keys[] =
 {
@@ -25,6 +26,9 @@ static const char *config_keys[] =
     "IcePort",
     "IceSecret"
 };
+static std::string ice_host = "";
+static std::string ice_secret = "";
+static uint32_t ice_port = 6502;
 static int config_keys_num = sizeof(config_keys);
 
 MumbleCollector* collector = nullptr;
@@ -32,15 +36,28 @@ MumbleCollector* collector = nullptr;
 #ifdef HAVE_COLLECTD
 static int my_config (const char *key, const char *value)
 {
-    if (collector) {
-//        collector->setProperty(std::string(key), std::string(value));
+    if (strcmp(key,"IcePort") == 0) {
+        auto mport = strtol(key, nullptr, 10);
+        assert(mport > 0 && mport < 65536);
+        ice_port = static_cast<uint32_t>(mport);
+        return 0;
     }
-    return 0;
+
+    if (strcmp(key, "IceHost") == 0) {
+        ice_host = std::string(value);
+        return 0;
+    }
+
+    if (strcmp(key, "IceSecret") == 0) {
+        ice_secret = std::string(value);
+        return 0;
+    }
+    return 1;
 }
 
 static int my_init (void)
 {
-    collector = new MumbleCollector();
+    collector = new MumbleCollector(ice_host, ice_port, ice_secret);
     return 0;
 }
  
@@ -54,26 +71,34 @@ static int my_shutdown(void)
 
 static int my_read (void)
 {
-    value_t values[3];
+    value_t values[1];
     value_list_t vl = VALUE_LIST_INIT;
+
+    values[0].gauge = collector->getUserCount();
+
     vl.values = values;
-    vl.values_len = sizeof(values);
+    vl.values_len = STATIC_ARRAY_SIZE(values);
     sstrncpy (vl.host, hostname_g, sizeof (vl.host));
-    sstrncpy (vl.plugin, "load", sizeof (vl.plugin));
-    sstrncpy (vl.type, "load", sizeof (vl.type));
-    auto count = collector->getUserCount();
-    std::cout << count << std::endl;
+    sstrncpy (vl.plugin, PLUGIN_NAME, sizeof (vl.plugin));
+    sstrncpy (vl.type, "count", sizeof (vl.type));
     plugin_dispatch_values (&vl);
     return 0;
 }
 
+/**
+ * Definition for the datatype to be used by collectd
+ */
+static data_source_t mumble_dsrc[] = {{"count", DS_TYPE_GAUGE, 0, NAN }};
+static data_set_t mumble_ds = {PLUGIN_NAME, STATIC_ARRAY_SIZE(mumble_dsrc), mumble_dsrc};
+
 extern "C" {
     void module_register ()
     {
-        plugin_register_config (NAME, my_config, config_keys, config_keys_num);
-        plugin_register_init (NAME, my_init);
-        plugin_register_shutdown (NAME, my_shutdown);
-        plugin_register_read (NAME, my_read);
+        plugin_register_data_set(&mumble_ds);
+        plugin_register_config (PLUGIN_NAME, my_config, config_keys, config_keys_num);
+        plugin_register_init (PLUGIN_NAME, my_init);
+        plugin_register_shutdown (PLUGIN_NAME, my_shutdown);
+        plugin_register_read (PLUGIN_NAME, my_read);
     }
 }
 

@@ -1,8 +1,13 @@
 #include "collector.h"
 #include <cassert>
 #include <cstdlib>
+#include <iostream>
+#include <string>
+
 MumbleCollector::MumbleCollector(
-        ) {
+            std::string _host,
+            uint32_t _port,
+            std::string _secret) {
     auto props = Ice::createProperties();
     props->setProperty("Ice.ImplicitContext", "Shared");
 
@@ -10,36 +15,34 @@ MumbleCollector::MumbleCollector(
     idata.properties = props;
 
     this->ice = Ice::initialize(idata);
-    this->port = 6502;
-    this->host = "127.0.0.1";
-    this->secret = "";
+    this->port = _port;
+    this->host = _host;
+    this->secret = _secret;
 }
 
-void MumbleCollector::setProperty(
-        std::string key,
-        std::string value
+std::string MumbleCollector::connectStr(
         ) {
-    if (key == "port") {
-        auto port = strtol(key.c_str(), NULL, 10);
-        assert(port > 0 && port < 65536);
-        this->port = port;
-    }
-
-    if (key == "host") {
-        this->host = value;
-    }
-
-    if (key == "secret") {
-        this->secret = value;
-    }
+    std::ostringstream stringStream;
+    stringStream << "Meta:tcp ";
+    stringStream << "-h " << this->host << " ";
+    stringStream << "-p " << this->port << " ";
+    stringStream << "-t 1000";
+    return stringStream.str();
 }
 
+/**
+ * Connect to the Mumble server via the ICE protocl and initialize a Meta class which is then
+ * returned. This meta class can be used to further examine the data on the server, such as enumerating
+ * servers.
+ */
 Murmur::MetaPrx MumbleCollector::connect(
         ) {
 
-    this->ice->getImplicitContext()->put("secret", "foobar");
+    if (this->secret.size() > 0) {
+        this->ice->getImplicitContext()->put("secret", this->secret);
+    }
 
-    auto obj = this->ice->stringToProxy("Meta:tcp -h 127.0.0.1 -p 6502 -t 1000");
+    auto obj = this->ice->stringToProxy(this->connectStr());
     auto meta = Murmur::MetaPrx::checkedCast(obj);
     if (!meta) {
         return nullptr;
@@ -54,10 +57,10 @@ MumbleCollector::~MumbleCollector(
     }
 }
 
-int MumbleCollector::getUserCount() {
+uint32_t MumbleCollector::getUserCount() {
     auto meta = this->connect();
     for (auto server : meta->getBootedServers()) {
-        return server->getUsers().size();
+        return static_cast<uint32_t>(server->getUsers().size());
     }
     return 0;
 }
