@@ -8,8 +8,12 @@
 #include <iostream>
 #include <string>
 
-MumbleCollector::MumbleCollector(std::string _host, uint32_t _port,
-                                 std::string _secret) {
+MumbleCollector::MumbleCollector(const std::string _host, const uint32_t _port,
+                                 const std::string _secret) :
+    host(_host),
+    port(_port),
+    secret(_secret) {
+
   auto props = Ice::createProperties();
   props->setProperty("Ice.ImplicitContext", "Shared");
 
@@ -17,12 +21,9 @@ MumbleCollector::MumbleCollector(std::string _host, uint32_t _port,
   idata.properties = props;
 
   this->ice = Ice::initialize(idata);
-  this->port = _port;
-  this->host = _host;
-  this->secret = _secret;
 }
 
-std::string MumbleCollector::connectStr() {
+std::string MumbleCollector::connectStr() const {
   std::ostringstream stringStream;
   stringStream << "Meta:tcp ";
   stringStream << "-h " << this->host << " ";
@@ -47,7 +48,7 @@ Murmur::MetaPrx MumbleCollector::connect() {
   auto obj = this->ice->stringToProxy(this->connectStr());
   auto meta = Murmur::MetaPrx::checkedCast(obj);
   if (!meta) {
-    return nullptr;
+    throw connection_exp;
   }
   return meta;
 }
@@ -59,9 +60,13 @@ MumbleCollector::~MumbleCollector() {
 }
 
 uint32_t MumbleCollector::getUserCount() {
-  auto meta = this->connect();
-  for (auto server : meta->getBootedServers()) {
-    return static_cast<uint32_t>(server->getUsers().size());
+  try {
+    auto meta = this->connect();
+    for (auto& server : meta->getBootedServers()) {
+      return static_cast<uint32_t>(server->getUsers().size());
+    }
+    return 0;
+  } catch (ConnectionException& e) {
+    return 0;
   }
-  return 0;
 }

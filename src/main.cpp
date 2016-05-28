@@ -25,8 +25,8 @@ extern "C" {
 #define PLUGIN_NAME "mumble"
 
 static const char *config_keys[] = {"IceHost", "IcePort", "IceSecret"};
-static std::string ice_host = "127.0.0.1";
-static std::string ice_secret = "";
+static std::string ice_host("127.0.0.1");
+static std::string ice_secret("");
 static uint32_t ice_port = 6502;
 static int config_keys_num = sizeof(config_keys);
 

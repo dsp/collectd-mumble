@@ -12,18 +12,25 @@
 
 #include <cstdint>
 #include <string>
+#include <exception>
 class MumbleCollector {
   public:
     MumbleCollector(std::string _host, uint32_t _port, std::string _secret);
     ~MumbleCollector();
     uint32_t getUserCount();
   private:
-    uint32_t port;
     std::string host;
+    uint32_t port;
     std::string secret;
     Ice::CommunicatorPtr ice;
     Murmur::MetaPrx connect();
-    std::string connectStr();
+    std::string connectStr() const;
 };
 
+class ConnectionException : public std::exception {
+  virtual const char* what() const throw()
+  {
+    return "Cannot connect";
+  }
+} connection_exp;
 #endif
