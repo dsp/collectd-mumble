@@ -1,3 +1,7 @@
+/**
+ * (c) 2016 David "Danilaw" Soria Parra
+ * vim: set ts=2 sts=2 sw=2 expandtab: 
+ */
 #ifdef HAVE_COLLECTD
 extern "C" {
 #define HAVE_ENDIAN_H 1
