@@ -1,6 +1,6 @@
 /**
  * (c) 2016 David "Danilaw" Soria Parra
- * vim: set ts=2 sts=2 sw=2 expandtab: 
+ * vim: set ts=2 sts=2 sw=2 expandtab:
  */
 #include "collector.h"
 #include <cassert>
@@ -9,18 +9,8 @@
 #include <string>
 
 MumbleCollector::MumbleCollector(const std::string _host, const uint32_t _port,
-                                 const std::string _secret) :
-    host(_host),
-    port(_port),
-    secret(_secret) {
-
-  auto props = Ice::createProperties();
-  props->setProperty("Ice.ImplicitContext", "Shared");
-
-  Ice::InitializationData idata;
-  idata.properties = props;
-
-  this->ice = Ice::initialize(idata);
+                                 const std::string _secret)
+    : host(_host), port(_port), secret(_secret) {
 }
 
 std::string MumbleCollector::connectStr() const {
@@ -40,6 +30,13 @@ std::string MumbleCollector::connectStr() const {
  * servers.
  */
 Murmur::MetaPrx MumbleCollector::connect() {
+  auto props = Ice::createProperties();
+  props->setProperty("Ice.ImplicitContext", "Shared");
+
+  Ice::InitializationData idata;
+  idata.properties = props;
+
+  this->ice = Ice::initialize(idata);
 
   if (this->secret.size() > 0) {
     this->ice->getImplicitContext()->put("secret", this->secret);
@@ -48,25 +45,19 @@ Murmur::MetaPrx MumbleCollector::connect() {
   auto obj = this->ice->stringToProxy(this->connectStr());
   auto meta = Murmur::MetaPrx::checkedCast(obj);
   if (!meta) {
-    throw connection_exp;
+    throw ConnectionException();
   }
   return meta;
 }
 
-MumbleCollector::~MumbleCollector() {
+void MumbleCollector::disconnect() {
   if (this->ice) {
     this->ice->destroy();
   }
 }
 
-uint32_t MumbleCollector::getUserCount() {
-  try {
-    auto meta = this->connect();
-    for (auto& server : meta->getBootedServers()) {
-      return static_cast<uint32_t>(server->getUsers().size());
-    }
-    return 0;
-  } catch (ConnectionException& e) {
-    return 0;
+MumbleCollector::~MumbleCollector() {
+  if (this->ice) {
+    this->ice->destroy();
   }
 }

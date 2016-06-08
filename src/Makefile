@@ -29,6 +29,9 @@ collectd-mumble: $(objects)
 %.o: %.cpp
 	$(CXX) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
 
+format: collector.cpp collector.h main.cpp
+	clang-format-3.7 -i --style=llvm $<
+
 clean:
 	rm -f *.o mumble.so mumble
 .PHONY: clean

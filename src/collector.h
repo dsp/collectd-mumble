@@ -17,13 +17,13 @@ class MumbleCollector {
   public:
     MumbleCollector(std::string _host, uint32_t _port, std::string _secret);
     ~MumbleCollector();
-    uint32_t getUserCount();
+    Murmur::MetaPrx connect();
+    void disconnect();
   private:
     std::string host;
     uint32_t port;
     std::string secret;
     Ice::CommunicatorPtr ice;
-    Murmur::MetaPrx connect();
     std::string connectStr() const;
 };
 
@@ -32,5 +32,5 @@ class ConnectionException : public std::exception {
   {
     return "Cannot connect";
   }
-} connection_exp;
+};
 #endif
