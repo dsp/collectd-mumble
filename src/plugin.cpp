@@ -2,18 +2,17 @@
  * (c) 2016 David "Danilaw" Soria Parra
  * vim: set ts=2 sts=2 sw=2 expandtab: 
  */
-#ifdef HAVE_COLLECTD
+#include <config.h>
 extern "C" {
-#define HAVE_ENDIAN_H 1
 #include <endian.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <collectd/liboconfig/oconfig.h>
-#include <collectd/core/daemon/collectd.h>
-#include <collectd/core/daemon/common.h> /* auxiliary functions */
-#include <collectd/core/daemon/plugin.h> /* plugin_register_*, plugin_dispatch_values */
+
+#include <oconfig.h>
+#include <collectd.h>
+#include <common.h> /* auxiliary functions */
+#include <plugin.h> /* plugin_register_*, plugin_dispatch_values */
 }
-#endif
 
 #include <cstdlib>
 #include <memory>

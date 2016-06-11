@@ -5,9 +5,11 @@
 #ifndef __COLLECTOR_H__
 #define __COLLECTOR_H__
 
-#ifdef HAVE_ICE
- #include <Ice/Ice.h>
+#ifdef HAVE_CONFG_H
+ #include "config.h"
 #endif
+
+#include <Ice/Ice.h>
 #include "Murmur.h"
 
 #include <cstdint>
